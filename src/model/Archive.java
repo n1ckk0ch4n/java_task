@@ -11,9 +11,6 @@ public class Archive {
     private LocalDateTime createdAt;
     private List<File> files = new ArrayList<>();
 
-    public Archive() {
-    }
-
     public Archive(UUID id, String name, LocalDateTime createdAt) {
         this.id = id;
         this.name = name;

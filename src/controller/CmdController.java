@@ -1,5 +1,6 @@
 package controller;
 
+import exception.BusinessE;
 import model.Archive;
 import model.File;
 import service.ArchiveService;
@@ -19,15 +20,15 @@ public class CmdController {
 
     public void run() {
         while (true) {
-            System.out.println("\nАрхивы");
-            System.out.println("1.Все архивы");
-            System.out.println("2.Содержимое");
-            System.out.println("3.Создать архив");
-            System.out.println("4.Переименовать архив");
-            System.out.println("5.Удалить архив");
-            System.out.println("6.Добавить файл в архив");
-            System.out.println("7.Удалить файл из архива");
-            System.out.println("0.Выход");
+            System.out.println("\nВыберите операцию");
+            System.out.println("1. Все архивы");
+            System.out.println("2. Содержимое");
+            System.out.println("3. Создать архив");
+            System.out.println("4. Переименовать архив");
+            System.out.println("5. Удалить архив");
+            System.out.println("6. Добавить файл в архив");
+            System.out.println("7. Удалить файл из архива");
+            System.out.println("0. Выход");
             System.out.print("Выбор: ");
 
             String command = scanner.nextLine();
@@ -42,13 +43,15 @@ public class CmdController {
                     case "6" -> addFile();
                     case "7" -> removeFile();
                     case "0" -> {
-                        System.out.println("Выход");
+                        System.out.println("Выход из программы");
                         return;
                     }
                     default -> System.out.println("Неверная команда");
                 }
-            } catch (Exception e) {
+            } catch (BusinessE e) {
                 System.out.println("Ошибка: " + e.getMessage());
+            } catch (Exception e) {
+                System.out.println("Непредвиденная ошибка: " + e.getMessage());
             }
         }
     }
@@ -59,35 +62,41 @@ public class CmdController {
             System.out.println("Архивов нет");
             return;
         }
+        System.out.println("\nВсе архивы");
         all.forEach(a -> System.out.println(formatArchive(a)));
     }
 
     private void showById() {
         UUID id = getUUID();
         Archive archive = archiveService.getById(id);
-        System.out.println("Архив: " + archive.getName() + " (создан: " + archive.getCreatedAt() + ")");
+
+        System.out.println("\nАрхив: " + archive.getName() + " ---");
+        System.out.println("ID архива: " + archive.getId());
+        System.out.println("Дата создания: " + archive.getCreatedAt());
+        System.out.println("Файлы:");
+
         if (archive.getFiles().isEmpty()) {
-            System.out.println("Файлов нет");
+            System.out.println("Архив пуст");
         } else {
             for (File f : archive.getFiles()) {
-                System.out.println(f.getName() + "ID: " + f.getId());
+                System.out.println("ID: " + f.getId() + "Имя: " + f.getName());
             }
         }
     }
 
     private void create() {
-        System.out.print("Введите наименование архива:");
+        System.out.print("Введите наименование архива: ");
         String name = scanner.nextLine();
         Archive a = archiveService.create(name);
-        System.out.println("Успешно создано:" + formatArchive(a));
+        System.out.println("Успешно создано: " + formatArchive(a));
     }
 
     private void update() {
         UUID id = getUUID();
-        System.out.print("Введите новое наименование архива:");
+        System.out.print("Введите новое наименование архива: ");
         String newName = scanner.nextLine();
         Archive updated = archiveService.update(id, newName);
-        System.out.println("Архив обновлен:" + formatArchive(updated));
+        System.out.println("Архив обновлен: " + formatArchive(updated));
     }
 
     private void delete() {
@@ -98,35 +107,42 @@ public class CmdController {
 
     private void addFile() {
         UUID archiveId = getUUID();
-        System.out.print("Введите имя файла:");
+        System.out.print("Введите имя файла: ");
         String fileName = scanner.nextLine();
-        System.out.print("Введите текст файла:");
+        System.out.print("Введите текст файла: ");
         String content = scanner.nextLine();
+
         archiveService.addFile(archiveId, fileName, content);
-        System.out.println("Файл добавлен в архив");
+        System.out.println("Файл успешно добавлен в архив");
     }
 
     private void removeFile() {
         UUID archiveId = getUUID();
         System.out.print("Введите ID файла для удаления: ");
-        UUID fileId = UUID.fromString(scanner.nextLine());
+        UUID fileId;
+        try {
+            fileId = UUID.fromString(scanner.nextLine());
+        } catch (IllegalArgumentException e) {
+            throw new BusinessE("Неверный формат ID файла");
+        }
+
         archiveService.removeFile(archiveId, fileId);
         System.out.println("Файл удален из архива");
     }
 
     private UUID getUUID() {
         while (true) {
-            System.out.print("Введите ID:");
+            System.out.print("Введите ID: ");
             try {
                 return UUID.fromString(scanner.nextLine());
             } catch (IllegalArgumentException e) {
-                System.out.println("Неверный формат ID.Попробуйте снова.");
+                System.out.println("Неверный формат ID. Попробуйте снова.");
             }
         }
     }
-
     private String formatArchive(Archive archive) {
-        return "ID: " + archive.getId() + "Название: " + archive.getName() +
-                "Файлов: " + archive.getFiles().size();
+        return String.format("ID: %s Название: %s",
+                archive.getId(),
+                archive.getName());
     }
 }

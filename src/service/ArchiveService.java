@@ -1,65 +1,71 @@
 package service;
 
-import exception.AppException;
+import exception.AENotFound;
+import exception.ValidationE;
 import model.Archive;
 import model.File;
-import repository.Repo;
+import repository.ARepo;
+import repository.FileRepo;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 public class ArchiveService {
-    private final Repo repo;
+    private final ARepo archiveRepo;
+    private final FileRepo fileRepo;
 
-    public ArchiveService(Repo repo) {
-        this.repo = repo;
+    public ArchiveService(ARepo archiveRepo, FileRepo fileRepo) {
+        this.archiveRepo = archiveRepo;
+        this.fileRepo = fileRepo;
     }
 
     public List<Archive> getAll() {
-        return repo.getAll();
+        return archiveRepo.getAll();
     }
 
     public Archive getById(UUID id) {
-        return repo.get(id);
+        return archiveRepo.get(id)
+                .orElseThrow(() -> new AENotFound(id));
     }
 
     public Archive create(String name) {
         if (name == null || name.isBlank()) {
-            throw new AppException("Наименование архива не может быть пустым");
+            throw new ValidationE("Наименование архива не может быть пустым");
         }
         Archive archive = new Archive(UUID.randomUUID(), name, LocalDateTime.now());
-        repo.create(archive);
+        archiveRepo.create(archive);
         return archive;
     }
 
     public Archive update(UUID id, String newName) {
         if (newName == null || newName.isBlank()) {
-            throw new AppException("Наименование архива не может быть пустым");
+            throw new ValidationE("Наименование архива не может быть пустым");
         }
-        Archive archive = repo.get(id);
+        Archive archive = getById(id);
         archive.setName(newName);
-        repo.update(archive);
+        archiveRepo.update(archive);
         return archive;
     }
 
-    public boolean deleteById(UUID id) {
-        repo.delete(id);
-        return true;
+    public void deleteById(UUID id) {
+        archiveRepo.delete(id);
     }
 
     public void addFile(UUID archiveId, String fileName, String content) {
-        Archive archive = repo.get(archiveId);
-        File newFile = new File(UUID.randomUUID(), fileName, content, LocalDateTime.now());
-        archive.getFiles().add(newFile);
-        repo.update(archive);
-    }
-    public void removeFile(UUID archiveId, UUID fileId) {
-        Archive archive = repo.get(archiveId);
-        boolean removed = archive.getFiles().removeIf(f -> f.getId().equals(fileId));
-        if (!removed) {
-            throw new AppException("Файл с таким ID не найден");
+        if (fileName == null || fileName.isBlank()) {
+            throw new ValidationE("Имя файла не может быть пустым");
         }
-        repo.update(archive);
+        Archive archive = getById(archiveId);
+        File newFile = new File(UUID.randomUUID(), fileName, content, LocalDateTime.now());
+
+        fileRepo.addFile(archive, newFile);
+        archiveRepo.update(archive);
+    }
+
+    public void removeFile(UUID archiveId, UUID fileId) {
+        Archive archive = getById(archiveId);
+        fileRepo.removeFile(archive, fileId);
+        archiveRepo.update(archive);
     }
 }
