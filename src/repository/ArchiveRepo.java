@@ -1,32 +1,38 @@
 package repository;
 
-import exception.AENotFound;
+import exception.ArchiveExceptionNotFound;
 import model.Archive;
 
 import java.util.*;
 
-public class ARepo {
+public class ArchiveRepo implements  ArchiveRepository{
     private final Map<UUID, Archive> storage = new HashMap<>();
 
-    public void create(Archive archive) {
+    @Override
+    public Archive create(Archive archive) {
         if (archive.getId() == null) {
             archive.setId(UUID.randomUUID());
         }
         storage.put(archive.getId(), archive);
+        return archive;
     }
 
-    public void update(Archive archive) {
+    @Override
+    public Archive update(Archive archive) {
         if (!storage.containsKey(archive.getId())) {
-            throw new AENotFound(archive.getId());
+            throw new ArchiveExceptionNotFound(archive.getId());
         }
         storage.put(archive.getId(), archive);
+        return archive;
     }
 
-    public void delete(UUID id) {
+    @Override
+    public Archive delete(UUID id) {
         if (!storage.containsKey(id)) {
-            throw new AENotFound(id);
+            throw new ArchiveExceptionNotFound(id);
         }
         storage.remove(id);
+        return null;
     }
 
     public Optional<Archive> get(UUID id) {

@@ -1,19 +1,23 @@
 package repository;
 
-import exception.FENotFound;
+import exception.FileExceptionNotFound;
 import model.Archive;
 import model.File;
 
 import java.util.UUID;
 
-public class FileRepo {
-    public void addFile(Archive archive, File file) {
+public class FileRepo implements FileRepository{
+    @Override
+    public File addFile(Archive archive, File file) {
         archive.getFiles().add(file);
+        return file;
     }
-    public void removeFile(Archive archive, UUID fileId) {
+    @Override
+    public File removeFile(Archive archive, UUID fileId) {
         boolean removed = archive.getFiles().removeIf(f -> f.getId().equals(fileId));
         if (!removed) {
-            throw new FENotFound(fileId);
+            throw new FileExceptionNotFound(fileId);
         }
+        return null;
     }
 }

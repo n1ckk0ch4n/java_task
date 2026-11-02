@@ -1,10 +1,10 @@
 package service;
 
-import exception.AENotFound;
-import exception.ValidationE;
+import exception.ArchiveExceptionNotFound;
+import exception.ValidationException;
 import model.Archive;
 import model.File;
-import repository.ARepo;
+import repository.ArchiveRepo;
 import repository.FileRepo;
 
 import java.time.LocalDateTime;
@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.UUID;
 
 public class ArchiveService {
-    private final ARepo archiveRepo;
+    private final ArchiveRepo archiveRepo;
     private final FileRepo fileRepo;
 
-    public ArchiveService(ARepo archiveRepo, FileRepo fileRepo) {
+    public ArchiveService(ArchiveRepo archiveRepo, FileRepo fileRepo) {
         this.archiveRepo = archiveRepo;
         this.fileRepo = fileRepo;
     }
@@ -26,12 +26,12 @@ public class ArchiveService {
 
     public Archive getById(UUID id) {
         return archiveRepo.get(id)
-                .orElseThrow(() -> new AENotFound(id));
+                .orElseThrow(() -> new ArchiveExceptionNotFound(id));
     }
 
     public Archive create(String name) {
         if (name == null || name.isBlank()) {
-            throw new ValidationE("Наименование архива не может быть пустым");
+            throw new ValidationException("Наименование архива не может быть пустым");
         }
         Archive archive = new Archive(UUID.randomUUID(), name, LocalDateTime.now());
         archiveRepo.create(archive);
@@ -40,7 +40,7 @@ public class ArchiveService {
 
     public Archive update(UUID id, String newName) {
         if (newName == null || newName.isBlank()) {
-            throw new ValidationE("Наименование архива не может быть пустым");
+            throw new ValidationException("Наименование архива не может быть пустым");
         }
         Archive archive = getById(id);
         archive.setName(newName);
@@ -54,7 +54,7 @@ public class ArchiveService {
 
     public void addFile(UUID archiveId, String fileName, String content) {
         if (fileName == null || fileName.isBlank()) {
-            throw new ValidationE("Имя файла не может быть пустым");
+            throw new ValidationException("Имя файла не может быть пустым");
         }
         Archive archive = getById(archiveId);
         File newFile = new File(UUID.randomUUID(), fileName, content, LocalDateTime.now());

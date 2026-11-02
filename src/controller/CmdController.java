@@ -1,6 +1,6 @@
 package controller;
 
-import exception.BusinessE;
+import exception.BusinessException;
 import model.Archive;
 import model.File;
 import service.ArchiveService;
@@ -48,7 +48,7 @@ public class CmdController {
                     }
                     default -> System.out.println("Неверная команда");
                 }
-            } catch (BusinessE e) {
+            } catch (BusinessException e) {
                 System.out.println("Ошибка: " + e.getMessage());
             } catch (Exception e) {
                 System.out.println("Непредвиденная ошибка: " + e.getMessage());
@@ -70,7 +70,7 @@ public class CmdController {
         UUID id = getUUID();
         Archive archive = archiveService.getById(id);
 
-        System.out.println("\nАрхив: " + archive.getName() + " ---");
+        System.out.println("\nАрхив: " + archive.getName());
         System.out.println("ID архива: " + archive.getId());
         System.out.println("Дата создания: " + archive.getCreatedAt());
         System.out.println("Файлы:");
@@ -123,7 +123,7 @@ public class CmdController {
         try {
             fileId = UUID.fromString(scanner.nextLine());
         } catch (IllegalArgumentException e) {
-            throw new BusinessE("Неверный формат ID файла");
+            throw new BusinessException("Неверный формат ID файла");
         }
 
         archiveService.removeFile(archiveId, fileId);
